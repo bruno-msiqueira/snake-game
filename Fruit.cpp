@@ -2,6 +2,7 @@
 #include "Utility.h"
 #include <cstdlib> // For rand() and srand()
 #include <ctime> // For time()
+#include <random>
 
 // Constructor initializes the fruit.
 Fruit::Fruit(int grid_width, int grid_height, const Snake& snake) : grid_width(grid_width), grid_height(grid_height) {
@@ -26,4 +27,16 @@ void Fruit::ResetPosition(const Snake& snake) {
     } while (IsInSnakeBody(snake.GetSegments(), new_position));
 
     position = new_position;
+}
+
+void Fruit::Generate(const Snake& snake) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(1, grid_width - 1);
+    std::uniform_int_distribution<> dis2(1, grid_height - 1);
+
+    do {
+        position.first = dis(gen);
+        position.second = dis2(gen);
+    } while (snake.IsPositionOccupied(position));
 }
