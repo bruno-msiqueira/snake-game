@@ -8,15 +8,15 @@
 
 // Constructor initializes the game.
 Game::Game(int grid_width, int grid_height)
-        : snake(grid_width, grid_height),
-            fruit(grid_width, grid_height, snake),
-            gameOver(false),
-            score(0),
-            grid_width(grid_width),
-            grid_height(grid_height),
-            currentBuffer(grid_height, std::vector<char>(grid_width, ' ')),
-            previousBuffer(grid_height, std::vector<char>(grid_width, ' ')) {
-        // Initialize game
+        :   m_snake(grid_width, grid_height),
+            m_boardGame(grid_width, grid_height, &m_snake),
+            m_gameOver(false),
+            m_score(0),
+            m_gridWidth(grid_width),
+            m_gridHeight(grid_height),
+            m_currentBuffer(grid_height, std::vector<char>(grid_width, ' ')),
+            m_previousBuffer(grid_height, std::vector<char>(grid_width, ' ')) {
+    // Initialize game
     // Clear the console
     system(GetClearCommand().c_str());
 }
@@ -29,84 +29,88 @@ void Game::SetIterationTime(double time) {
 void Game::Run() {
     printf("\033[?25l"); // Hide cursor
 
-    while (!snake.IsGameOver()) {
+    while (!m_snake.IsGameOver() && !m_snake.IsGameWon()) {
         Draw();
         Input();
         Update();
     }
+
     Draw();
-    std::cout << "\033[" << grid_height + 2 << ";1H\033[?25h"; // Move cursor and show it
+    std::cout << "\033[" << m_gridHeight + 2 << ";1H\033[?25h"; // Move cursor and show it
 }
 
 // Draw renders the game state.
 void Game::Draw() {
+    PrintScore();
+
     // Fill the current buffer with the game state
-    for (int i = 0; i < grid_height; ++i) {
-        for (int j = 0; j < grid_width; ++j) {
+    for (int i = 0; i < m_gridHeight; ++i) {
+        for (int j = 0; j < m_gridWidth; ++j) {
             std::pair<int, int> point(j, i);
 
-            if (snake.GetSegments()[0] == point) {
-                if (snake.IsGameOver()) {
-                    currentBuffer[i][j] = 'X'; // Draw 'X' if game is over
+            if (m_snake.GetSegments()[0] == point) {
+                if (m_snake.IsGameOver()) {
+                    m_currentBuffer[i][j] = 'X'; // Draw 'X' if game is over
                 } else {
-                    currentBuffer[i][j] = 'H'; // Draw snake head
+                    m_currentBuffer[i][j] = 'H'; // Draw snake head
                 }
-            } else if (i == 0 || i == grid_height - 1) {
-                currentBuffer[i][j] = '#'; // Draw top and bottom borders
-            } else if (j == 0 || j == grid_width - 1) {
-                currentBuffer[i][j] = '#'; // Draw left and right borders
-            } else if (IsInSnakeBody(snake.GetSegments(), point)) {
-                currentBuffer[i][j] = 'o'; // Draw snake body
-            } else if (fruit.GetPosition() == point) {
-                currentBuffer[i][j] = '*'; // Draw fruit
+            } else if (i == 0 || i == m_gridHeight - 1) {
+                m_currentBuffer[i][j] = '#'; // Draw top and bottom borders
+            } else if (j == 0 || j == m_gridWidth - 1) {
+                m_currentBuffer[i][j] = '#'; // Draw left and right borders
+            } else if (IsInSnakeBody(m_snake.GetSegments(), point)) {
+                m_currentBuffer[i][j] = 'O'; // Draw snake body
+            } else if (m_boardGame.GetFruitPosition() == point) {
+                m_currentBuffer[i][j] = '*'; // Draw fruit
             } else {
-                currentBuffer[i][j] = ' '; // Draw empty space
+                m_currentBuffer[i][j] = ' '; // Draw empty space
             }
         }
     }
 
     // Compare the current buffer with the previous one and update the screen
-    for (int i = 0; i < grid_height; ++i) {
-        for (int j = 0; j < grid_width; ++j) {
-            if (currentBuffer[i][j] != previousBuffer[i][j]) {
+    for (int i = 0; i < m_gridHeight; ++i) {
+        for (int j = 0; j < m_gridWidth; ++j) {
+            if (m_currentBuffer[i][j] != m_previousBuffer[i][j]) {
                 // Move the cursor to the position (j, i) and print the new character
-                printf("\033[%d;%dH%c", i + 1, j + 1, currentBuffer[i][j]);
+                printf("\033[%d;%dH%c", i + 2, j + 1, m_currentBuffer[i][j]);
             }
         }
     }
 
     // Swap the buffers
-    previousBuffer.swap(currentBuffer);
+    m_previousBuffer.swap(m_currentBuffer);
 }
+
 // Input handles user input.
 bool Game::Input() {
     bool inputed = false;
     auto start = std::chrono::high_resolution_clock::now();
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
-    lastVerticalCommand = lastHorizontalCommand = '\0';
+    m_lastVerticalCommand = m_lastHorizontalCommand = '\0';
 
     while (elapsed.count() < ITERATION_TIME) {
         if (_kbhit()) {
             switch (_getch()) {
             case 72: // Up arrow key
-                if (lastVerticalCommand != 'd') {
-                    lastVerticalCommand = 'u';
+                if (m_lastVerticalCommand != 'd') {
+                    m_lastVerticalCommand = 'u';
                 }
                 break;
             case 80: // Down arrow key
-                if (lastVerticalCommand != 'u') {
-                    lastVerticalCommand = 'd';
+                if (m_lastVerticalCommand != 'u') {
+                    m_lastVerticalCommand = 'd';
                 }
                 break;
             case 75: // Left arrow key
-                if (lastHorizontalCommand != 'r') {
-                    lastHorizontalCommand = 'l';
+                if (m_lastHorizontalCommand != 'r') {
+                    m_lastHorizontalCommand = 'l';
                 }
                 break;
             case 77: // Right arrow key
-                if (lastHorizontalCommand != 'l') {
-                    lastHorizontalCommand = 'r';
+                if (m_lastHorizontalCommand != 'l') {
+                    m_lastHorizontalCommand = 'r';
                 }
                 break;
             }
@@ -130,45 +134,32 @@ char Game::Opposite(char command) {
     }
 }
 
-// Logic updates the game state.
-void Game::Logic() {
-}
-
 void Game::Update() {
     // Update snake's direction based on lastHorizontalCommand and lastVerticalCommand
-    if (lastHorizontalCommand == 'l' && lastVerticalCommand == 'u') {
-        snake.SetDirection(Snake::Direction::UP_LEFT);
-    } else if (lastHorizontalCommand == 'r' && lastVerticalCommand == 'u') {
-        snake.SetDirection(Snake::Direction::UP_RIGHT);
-    } else if (lastHorizontalCommand == 'l' && lastVerticalCommand == 'd') {
-        snake.SetDirection(Snake::Direction::DOWN_LEFT);
-    } else if (lastHorizontalCommand == 'r' && lastVerticalCommand == 'd') {
-        snake.SetDirection(Snake::Direction::DOWN_RIGHT);
-    } else if (lastHorizontalCommand == 'l') {
-        snake.SetDirection(Snake::Direction::LEFT);
-    } else if (lastHorizontalCommand == 'r') {
-        snake.SetDirection(Snake::Direction::RIGHT);
-    } else if (lastVerticalCommand == 'u') {
-        snake.SetDirection(Snake::Direction::UP);
-    } else if (lastVerticalCommand == 'd') {
-        snake.SetDirection(Snake::Direction::DOWN);
+    if (m_lastHorizontalCommand == 'l') {
+        m_snake.SetDirection(Snake::Direction::LEFT);
+    } else if (m_lastHorizontalCommand == 'r') {
+        m_snake.SetDirection(Snake::Direction::RIGHT);
+    } else if (m_lastVerticalCommand == 'u') {
+        m_snake.SetDirection(Snake::Direction::UP);
+    } else if (m_lastVerticalCommand == 'd') {
+        m_snake.SetDirection(Snake::Direction::DOWN);
     }
 
-    // Move the snake in the updated direction
-    snake.Move(snake.GetDirection());
-
-    // Check for game over condition
-    if (snake.SelfHit() || snake.WallHit()) {
-        gameOver = true;
+    // Check if the snake has hit the wall or itself
+    if (m_boardGame.Update()) {
+        ++m_score;
     }
+}
 
-    // Check if the snake has eaten the fruit
-    if (snake.EatFruit(fruit)) {
-        // Increase score and generate a new fruit
-        score++;
-        fruit.Generate(snake);
-
-        // Add a new segment to the snake
-        snake.Grow();
+void Game::PrintScore() {
+    static bool init = false;
+    if (!init) {
+        // Move cursor to the start of the game area
+        std::cout << "\033[1;1H" << "Score: " << m_score << std::endl;
+        init = true;
+    }
+    else {
+        std::cout << "\033[1;8H" << m_score;
     }
 }

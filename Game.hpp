@@ -1,6 +1,7 @@
 #ifndef GAME_HPP
 #define GAME_HPP
 
+#include "GameBoard.hpp"
 #include "Snake.hpp"
 #include "Fruit.hpp"
 
@@ -8,25 +9,25 @@
 class Game {
 public:
     // Constructor initializes the game.
-    Game(int grid_width, int grid_height);
+    Game(int gridWidth, int gridHeight);
     // Run starts the game loop.
     void Run();
 private:
     double ITERATION_TIME = 500.0; // Set default iteration time
 
-    Snake snake;
-    Fruit fruit;
-    bool gameOver;
-    int score;
+    Snake m_snake;
+    GameBoard m_boardGame;
+    bool m_gameOver;
+    unsigned int m_score;
 
-    std::vector<std::vector<char>> currentBuffer;
-    std::vector<std::vector<char>> previousBuffer;
+    std::vector<std::vector<char>> m_currentBuffer;
+    std::vector<std::vector<char>> m_previousBuffer;
 
-    char lastHorizontalCommand = 'd'; // Default to moving right
-    char lastVerticalCommand = '\0'; // Default to no vertical movement
+    char m_lastHorizontalCommand = 'd'; // Default to moving right
+    char m_lastVerticalCommand = '\0'; // Default to no vertical movement
 
-    int grid_width;
-    int grid_height;
+    int m_gridWidth;
+    int m_gridHeight;
 
     /**
      * @brief Set the Iteration Time object
@@ -48,10 +49,10 @@ private:
     void Draw();
     // Input handles user input.
     bool Input();
-    // Logic updates the game state.
-    void Logic();
     // Update updates the game state.
     void Update();
+    // PrintScore prints the current score
+    void PrintScore();
 };
 
 #endif
