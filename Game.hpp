@@ -3,7 +3,6 @@
 
 #include "GameBoard.hpp"
 #include "Snake.hpp"
-#include "Fruit.hpp"
 
 // The Game class manages the game.
 class Game {

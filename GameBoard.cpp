@@ -32,21 +32,25 @@ GameBoard::GameBoard(int width, int height, Snake* pSnake)
         }
     }
 
+    // Add the first fruit
     AddFruit();
 }
 
 void GameBoard::SetCell(std::pair<int, int> cell, CellType type) {
-    // Remove the cell from the set of empty positions if it is currently empty
-    if (m_grid[cell.second][cell.first] == CellType::Empty) {
-        m_emptyPositions.erase(cell);
-    }
+    if (m_grid[cell.second][cell.first] != type) {
 
-    // Update the cell type
-    m_grid[cell.second][cell.first] = type;
+        // Remove the cell from the set of empty positions if it is currently empty
+        if (m_grid[cell.second][cell.first] == CellType::Empty) {
+            m_emptyPositions.erase(cell);
+        }
 
-    // Add the cell to the set of empty positions if it is now empty
-    if (type == CellType::Empty) {
-        m_emptyPositions.insert(cell);
+        // Update the cell type
+        m_grid[cell.second][cell.first] = type;
+
+        // Add the cell to the set of empty positions if it is now empty
+        if (type == CellType::Empty) {
+            m_emptyPositions.insert(cell);
+        }
     }
 }
 
@@ -66,41 +70,38 @@ bool GameBoard::Update() {
         fruitEaten = true;
 
         // Updated the last position of eaten fruit to Snake
-        SetCell(m_fruitPosition, CellType::Snake);
+        SetCell(GetFruitPosition(), CellType::Snake);
 
         // Add a new segment to the snake
-        m_pSnake->Move(true);
+        SetCell(m_pSnake->Move(true), CellType::Snake);
 
         // Generate a new fruit
         AddFruit();
     }
     else {
+        std::pair<int, int> lastSnakeSegmentPosition = m_pSnake->GetLastSegment();
+
         // Move the snake in the updated direction
-        m_lastSnakeSegmentPosition = m_pSnake->Move(false);
+        SetCell(m_pSnake->Move(false), CellType::Snake);
 
         // Update the last position of the snake to Empty
-        SetCell(m_lastSnakeSegmentPosition, CellType::Empty);
+        SetCell(lastSnakeSegmentPosition, CellType::Empty);
     }
-
 
     return fruitEaten;
 }
 
-std::pair<int, int> GameBoard::AddFruit() {
+void GameBoard::AddFruit() {
     // Check if there are any empty positions
-    if (m_emptyPositions.empty()) {
-        throw std::runtime_error("No empty positions on the game board");
+    if (!m_emptyPositions.empty()) {
+        // Select a random position from the set
+        auto it = m_emptyPositions.begin();
+        std::advance(it, rand() % m_emptyPositions.size());
+        m_fruitPosition = *it;
+
+        // Set the cell on the game board to be a fruit
+        SetCell(GetFruitPosition(), CellType::Fruit);
     }
-
-    // Select a random position from the set
-    auto it = m_emptyPositions.begin();
-    std::advance(it, rand() % m_emptyPositions.size());
-    m_fruitPosition = *it;
-
-    // Set the cell on the game board to be a fruit
-    SetCell(m_fruitPosition, CellType::Fruit);
-
-    return m_fruitPosition;
 }
 
 std::pair<int, int> GameBoard::GetFruitPosition() {

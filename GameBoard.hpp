@@ -4,7 +4,6 @@
 #include <vector>
 #include <set>
 #include "Snake.hpp"
-#include "Fruit.hpp"
 
 class Snake;
 
@@ -30,12 +29,11 @@ private:
     int m_gridWidth;
     int m_gridHeight;
     std::vector<std::vector<CellType>> m_grid;
-    std::pair<int, int> m_lastSnakeSegmentPosition;
     std::pair<int, int> m_fruitPosition;
     Snake* m_pSnake;
     std::set<std::pair<int, int>> m_emptyPositions;
 
-    std::pair<int, int> AddFruit();
+    void AddFruit();
 };
 
 #endif // GAMEBOARD_HPP

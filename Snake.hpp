@@ -3,10 +3,6 @@
 
 #include <vector>
 #include <utility> // For std::pair
-#include "Fruit.hpp"
-
-// Forward declaration of Fruit
-class Fruit;
 
 // The Snake class represents the snake.
 class Snake {
