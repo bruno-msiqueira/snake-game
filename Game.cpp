@@ -89,7 +89,6 @@ bool Game::Input() {
     auto start = std::chrono::high_resolution_clock::now();
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
-    m_lastCommand = '\0';
 
     while (elapsed.count() < ITERATION_TIME) {
         if (_kbhit()) {
@@ -114,6 +113,10 @@ bool Game::Input() {
                     m_lastCommand = 'r';
                 }
                 break;
+            case 's': // Stop the snake
+            case 'S': // Stop the snake
+                m_lastCommand = 's';
+                break;
             }
             inputed = true;
         }
@@ -125,26 +128,32 @@ bool Game::Input() {
     return inputed;
 }
 
-char Game::Opposite(char command) {
-    switch (command) {
-        case 'w': return 's';
-        case 's': return 'w';
-        case 'a': return 'd';
-        case 'd': return 'a';
-        default: return '\0';
-    }
-}
-
 void Game::Update() {
     // Update snake's direction based on lastHorizontalCommand and lastVerticalCommand
-    if (m_lastCommand == 'l') {
-        SetSnakeDirection(Direction::LEFT);
-    } else if (m_lastCommand == 'r') {
-        SetSnakeDirection(Direction::RIGHT);
-    } else if (m_lastCommand == 'u') {
-        SetSnakeDirection(Direction::UP);
-    } else if (m_lastCommand == 'd') {
-        SetSnakeDirection(Direction::DOWN);
+    switch (m_lastCommand) {
+        case 'u':
+            if (m_snakeDirection != Direction::DOWN) {
+                SetSnakeDirection(Direction::UP);
+            }
+            break;
+        case 'd':
+            if (m_snakeDirection != Direction::UP) {
+                SetSnakeDirection(Direction::DOWN);
+            }
+            break;
+        case 'l':
+            if (m_snakeDirection != Direction::RIGHT) {
+                SetSnakeDirection(Direction::LEFT);
+            }
+            break;
+        case 'r':
+            if (m_snakeDirection != Direction::LEFT) {
+                SetSnakeDirection(Direction::RIGHT);
+            }
+            break;
+        case 's':
+            SetSnakeDirection(Direction::STOPPED);
+            return;
     }
 
     // Check if the snake has hit the wall or itself

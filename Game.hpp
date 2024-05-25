@@ -5,7 +5,7 @@
 #include "Snake.hpp"
 
 // The Direction enum represents the direction of the snake.
-enum class Direction { UP, DOWN, LEFT, RIGHT };
+enum class Direction { STOPPED, UP, DOWN, LEFT, RIGHT };
 
 // The Game class manages the game.
 class Game {
@@ -20,7 +20,7 @@ private:
     double ITERATION_TIME = 500.0; // Set default iteration time
 
     Snake m_snake;
-    Direction m_snakeDirection = Direction::RIGHT;
+    Direction m_snakeDirection = Direction::STOPPED;
     GameBoard m_gameBoard;
     bool m_gameOver;
     unsigned int m_score;
@@ -28,7 +28,7 @@ private:
     std::vector<std::vector<char>> m_currentBuffer;
     std::vector<std::vector<char>> m_previousBuffer;
 
-    char m_lastCommand = 'd'; // Default to moving right
+    char m_lastCommand = 's'; // Default command is stopped
 
     int m_gridWidth;
     int m_gridHeight;
@@ -39,15 +39,6 @@ private:
      * @param[in] time  The time in milliseconds
      */
     void SetIterationTime(double time);
-
-    /**
-     * @brief   Run the game loop
-     *
-     * @param[in]   command   The command to be checked
-     *
-     * @return  char    The opposite command
-     */
-    char Opposite(char command);
 
     // Draw renders the game state.
     void Draw(bool isGameOver);
