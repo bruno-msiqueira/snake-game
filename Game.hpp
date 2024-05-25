@@ -63,6 +63,7 @@ private:
 
     // IsGameOver checks if the game is over.
     bool IsGameOver() const;
+
     // IsGameWon checks if the game is won.
     bool IsGameWon();
 };

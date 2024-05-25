@@ -23,8 +23,6 @@ public:
     std::pair<unsigned int, unsigned int> Move(bool fruitEaten);
     // Move moves the snake in the current direction.
     std::pair<unsigned int, unsigned int> Move(Direction dir, bool fruitEaten);
-    bool SelfHit() const;
-    bool WallHit() const;
     bool EatFruit(const std::pair<unsigned int, unsigned int> fruitPosition);
     inline int GetSize() const { return m_segments.size(); }
     std::pair<unsigned int, unsigned int> GetHead() const;
@@ -37,8 +35,6 @@ public:
 private:
     std::vector<std::pair<unsigned int, unsigned int>> m_segments;
     Direction m_direction = Direction::RIGHT; // Default to moving right
-    int m_gridWidth;
-    int m_gridHeight;
 };
 
 #endif

@@ -1,7 +1,7 @@
 #include "Snake.hpp"
 
 // Constructor initializes the snake.
-Snake::Snake(int gridWidth, int gridHeight) : m_gridWidth(gridWidth), m_gridHeight(gridHeight) {
+Snake::Snake(int gridWidth, int gridHeight) {
     // Initialize snake with one segment at the center of the grid
     m_segments.push_back(std::make_pair(gridWidth / 2, gridHeight / 2));
     m_direction = Direction::RIGHT; // Start moving to the right
@@ -62,25 +62,6 @@ std::pair<unsigned int, unsigned int> Snake::Move(Direction dir, bool fruitEaten
     }
 
     return next_position;
-}
-
-bool Snake::SelfHit() const {
-    auto head = m_segments.front();
-
-    // The game is also over if the snake has collided with itself
-    for (auto it = m_segments.begin() + 1; it != m_segments.end(); ++it) {
-        if (*it == head) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool Snake::WallHit() const {
-    // The game is over if the snake has moved out of bounds
-    auto head = m_segments.front();
-    return (head.first == 0  || head.first >= m_gridWidth - 1 ||
-            head.second == 0 || head.second >= m_gridHeight - 1);
 }
 
 bool Snake::EatFruit(const std::pair<unsigned int, unsigned int> fruitPosition) {
