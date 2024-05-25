@@ -3,7 +3,8 @@
 
 #include "GameBoard.hpp"
 
-GameBoard::GameBoard(int width, int height, Snake* pSnake)
+GameBoard::GameBoard(unsigned int width, unsigned int height,
+                     unsigned int obstacleCount, Snake* pSnake)
     :   m_gridWidth(width),
         m_gridHeight(height),
         m_pSnake(pSnake),
@@ -15,7 +16,7 @@ GameBoard::GameBoard(int width, int height, Snake* pSnake)
     // Initialize the grid and the set of empty positions
     for (int x = 0; x < m_gridWidth; ++x) {
         for (int y = 0; y < m_gridHeight; ++y) {
-            std::pair<int, int> cell = std::make_pair(x, y);
+            std::pair<unsigned int, unsigned int> cell = std::make_pair(x, y);
 
             // If the cell is on the border
             if (x == 0 || y == 0 || x == m_gridWidth - 1 || y == m_gridHeight - 1) {
@@ -32,11 +33,36 @@ GameBoard::GameBoard(int width, int height, Snake* pSnake)
         }
     }
 
+    // Add obstacles
+    m_availableCells = ((m_gridWidth - 2) * (m_gridHeight - 2) -
+                        (AddObstacles(obstacleCount) ? obstacleCount : 0)),
+
     // Add the first fruit
     AddFruit();
 }
 
-void GameBoard::SetCell(std::pair<int, int> cell, CellType type) {
+// Add obstacles to the game board
+bool GameBoard::AddObstacles(unsigned int obstacleCount) {
+    // Check if there are enough empty positions to add obstacles
+    if (m_emptyPositions.size() < obstacleCount) {
+        std::cout << "Not enough empty positions to add obstacles." << std::endl;
+        return false;
+    }
+
+    // Add obstacles to random empty positions
+    for (unsigned int i = 0; i < obstacleCount; ++i) {
+        auto it = m_emptyPositions.begin();
+        std::advance(it, rand() % m_emptyPositions.size());
+        SetCell(*it, CellType::Obstacle);
+
+        // Add the obstacle to the set of obstacles
+        m_obstacles.insert(*it);
+    }
+
+    return true;
+}
+
+void GameBoard::SetCell(std::pair<unsigned int, unsigned int> cell, CellType type) {
     if (m_grid[cell.second][cell.first] != type) {
 
         // Remove the cell from the set of empty positions if it is currently empty
@@ -54,12 +80,8 @@ void GameBoard::SetCell(std::pair<int, int> cell, CellType type) {
     }
 }
 
-GameBoard::CellType GameBoard::GetCell(std::pair<int, int> cell) const {
+GameBoard::CellType GameBoard::GetCell(std::pair<unsigned int, unsigned int> cell) const {
     return m_grid[cell.second][cell.first];
-}
-
-void GameBoard::AddObstacle(std::pair<int, int> cell) {
-    SetCell(cell, CellType::Obstacle);
 }
 
 bool GameBoard::Update() {
@@ -79,7 +101,7 @@ bool GameBoard::Update() {
         AddFruit();
     }
     else {
-        std::pair<int, int> lastSnakeSegmentPosition = m_pSnake->GetLastSegment();
+        std::pair<unsigned int, unsigned int> lastSnakeSegmentPosition = m_pSnake->GetLastSegment();
 
         // Move the snake in the updated direction
         SetCell(m_pSnake->Move(false), CellType::Snake);
@@ -104,6 +126,19 @@ void GameBoard::AddFruit() {
     }
 }
 
-std::pair<int, int> GameBoard::GetFruitPosition() {
+std::pair<unsigned int, unsigned int> GameBoard::GetFruitPosition() {
     return m_fruitPosition;
+}
+
+bool GameBoard::IsObstacle(std::pair<unsigned int, unsigned int> cell) const {
+    // Check if the cell is in the set of obstacles
+    return m_obstacles.find(cell) != m_obstacles.end();
+}
+
+const std::set<std::pair<unsigned int, unsigned int>>& GameBoard::GetObstacles() const {
+    return m_obstacles;
+}
+
+unsigned int GameBoard::GetAvailableCells() const {
+    return m_availableCells;
 }

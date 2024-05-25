@@ -2,7 +2,7 @@
 #include "Utility.h"
 #include <cstdlib> // for getenv
 
-bool IsInSnakeBody(const std::vector<std::pair<int, int>>& body, const std::pair<int, int>& point) {
+bool IsInSnakeBody(const std::vector<std::pair<unsigned int, unsigned int>>& body, const std::pair<unsigned int, unsigned int>& point) {
     for (const auto& segment : body) {
         if (segment.first == point.first && segment.second == point.second) {
             return true;

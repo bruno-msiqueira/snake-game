@@ -13,7 +13,7 @@
  * @param point The point to check.
  * @return true if the point is present in the snake's body, false otherwise.
  */
-bool IsInSnakeBody(const std::vector<std::pair<int, int>>& body, const std::pair<int, int>& point);
+bool IsInSnakeBody(const std::vector<std::pair<unsigned int, unsigned int>>& body, const std::pair<unsigned int, unsigned int>& point);
 
 /**
  * @brief Retrieves the clear command for the current operating system.

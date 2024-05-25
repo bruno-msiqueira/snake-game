@@ -17,21 +17,26 @@ public:
         Obstacle
     };
 
-    GameBoard(int width, int height, Snake* pSnake);
+    GameBoard(unsigned int width, unsigned int height, unsigned int obstacleCount, Snake* pSnake);
 
-    void SetCell(std::pair<int, int> cell, CellType type);
-    CellType GetCell(std::pair<int, int> cell) const;
-    void AddObstacle(std::pair<int, int> cell);
+    bool IsObstacle(std::pair<unsigned int, unsigned int> cell) const;
+    void SetCell(std::pair<unsigned int, unsigned int> cell, CellType type);
+    CellType GetCell(std::pair<unsigned int, unsigned int> cell) const;
+    bool AddObstacles(unsigned int obstacleCount);
     bool Update();
-    std::pair<int, int> GetFruitPosition();
+    std::pair<unsigned int, unsigned int> GetFruitPosition();
+    const std::set<std::pair<unsigned int, unsigned int>> &GetObstacles() const;
+    unsigned int GetAvailableCells() const;
 
 private:
-    int m_gridWidth;
-    int m_gridHeight;
+    unsigned int m_gridWidth;
+    unsigned int m_gridHeight;
     std::vector<std::vector<CellType>> m_grid;
-    std::pair<int, int> m_fruitPosition;
+    std::pair<unsigned int, unsigned int> m_fruitPosition;
+    std::set<std::pair<unsigned int, unsigned int>> m_obstacles;
     Snake* m_pSnake;
-    std::set<std::pair<int, int>> m_emptyPositions;
+    std::set<std::pair<unsigned int, unsigned int>> m_emptyPositions;
+    unsigned int m_availableCells;
 
     void AddFruit();
 };
