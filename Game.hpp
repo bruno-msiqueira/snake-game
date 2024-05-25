@@ -16,14 +16,26 @@ public:
     // Run starts the game loop.
     void Run();
 
+    // IsGameOver checks if the game is over.
+    bool IsGameOver();
+
+    // IsGameWon checks if the game is won.
+    bool IsGameWon();
+
+    // IsGameQuit checks if the game is quit.
+    bool IsGameQuit();
+
+    // ResetGame resets the game.
+    void ResetGame();
+
 private:
     double m_iterationTime = 500.0; // Set default iteration time
-    Snake m_snake;
+    unsigned int m_obstacleCount;
     Direction m_snakeDirection = Direction::STOPPED;
     char m_lastCommand = 's'; // Default command is stopped
-    GameBoard m_gameBoard;
-    bool m_gameOver;
     unsigned int m_score;
+    Snake* m_pSnake = nullptr;
+    GameBoard* m_pGameBoard = nullptr;
 
     std::vector<std::vector<char>> m_currentBuffer;
     std::vector<std::vector<char>> m_previousBuffer;
@@ -50,11 +62,8 @@ private:
     // PrintScore prints the current score
     void PrintScore();
 
-    // IsGameOver checks if the game is over.
-    bool IsGameOver();
-
-    // IsGameWon checks if the game is won.
-    bool IsGameWon();
+    // UpdateScore prints updated score.
+    void UpdateScore();
 
     // SnakeSelfHit checks if the snake has hit itself.
     bool SnakeSelfHit() const;

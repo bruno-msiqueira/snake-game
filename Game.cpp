@@ -9,9 +9,7 @@
 // Constructor initializes the game.
 Game::Game(unsigned int gridWidth, unsigned int gridHeight, unsigned int obstacleCount, float iterationTime)
         :   m_iterationTime(iterationTime),
-            m_snake(gridWidth, gridHeight),
-            m_gameBoard(gridWidth, gridHeight, obstacleCount, &m_snake),
-            m_gameOver(false),
+            m_obstacleCount(obstacleCount),
             m_score(0),
             m_gridWidth(gridWidth),
             m_gridHeight(gridHeight),
@@ -22,8 +20,29 @@ Game::Game(unsigned int gridWidth, unsigned int gridHeight, unsigned int obstacl
         m_iterationTime = 500;
     }
 
+    ResetGame();
+}
+
+void Game::ResetGame() {
     // Clear the console
     system(GetClearCommand().c_str());
+
+    if (m_pGameBoard) {
+        delete m_pGameBoard;
+    }
+
+    if (m_pSnake) {
+        delete m_pSnake;
+    }
+
+    m_pSnake = new Snake(m_gridWidth, m_gridHeight);
+    m_pGameBoard = new GameBoard(m_gridWidth, m_gridHeight, m_obstacleCount, m_pSnake);
+    m_snakeDirection = Direction::STOPPED;
+    m_lastCommand = 's';
+    m_score = 0;
+    m_currentBuffer = std::vector<std::vector<char>>(m_gridHeight, std::vector<char>(m_gridWidth, ' '));
+    m_previousBuffer = std::vector<std::vector<char>>(m_gridHeight, std::vector<char>(m_gridWidth, ' '));
+    PrintScore();
 }
 
 void Game::SetIterationTime(double time) {
@@ -32,17 +51,12 @@ void Game::SetIterationTime(double time) {
 
 // Run starts the game loop.
 void Game::Run() {
-    printf("\033[?25l"); // Hide cursor
-    PrintScore();
-
-    while (!IsGameWon() && !IsGameOver())
+    while (!IsGameWon() && !IsGameOver() && !IsGameQuit())
     {
         Draw(false);
         Input();
         Update();
     };
-
-    std::cout << "\033[" << m_gridHeight + 2 << ";1H\033[?25h"; // Move cursor and show it
 }
 
 // Draw renders the game state.
@@ -52,7 +66,7 @@ void Game::Draw(bool isGameOver) {
         for (int j = 0; j < m_gridWidth; ++j) {
             std::pair<unsigned int, unsigned int> point(j, i);
 
-            if (m_snake.GetSegments()[0] == point) {
+            if (m_pSnake->GetSegments()[0] == point) {
                 if (isGameOver) {
                     m_currentBuffer[i][j] = 'X'; // Draw 'X' if game is over
                 } else {
@@ -62,11 +76,11 @@ void Game::Draw(bool isGameOver) {
                 m_currentBuffer[i][j] = '#'; // Draw top and bottom borders
             } else if (j == 0 || j == m_gridWidth - 1) {
                 m_currentBuffer[i][j] = '#'; // Draw left and right borders
-            } else if (m_gameBoard.IsObstacle(point)) {
+            } else if (m_pGameBoard->IsObstacle(point)) {
                 m_currentBuffer[i][j] = '#'; // Draw Obstacle
-            } else if (IsInSnakeBody(m_snake.GetSegments(), point)) {
+            } else if (IsInSnakeBody(m_pSnake->GetSegments(), point)) {
                 m_currentBuffer[i][j] = 'O'; // Draw snake body
-            } else if (m_gameBoard.GetFruitPosition() == point) {
+            } else if (m_pGameBoard->GetFruitPosition() == point) {
                 m_currentBuffer[i][j] = '*'; // Draw fruit
             } else {
                 m_currentBuffer[i][j] = ' '; // Draw empty space
@@ -122,6 +136,14 @@ bool Game::Input() {
             case 'S': // Stop the snake
                 m_lastCommand = 's';
                 break;
+            case 'r': // Reset the game
+            case 'R': // Reset the game
+                m_lastCommand = 'R';
+                break;
+            case 'q': // Quit the game
+            case 'Q': // Quit the game
+                m_lastCommand = 'Q';
+                break;
             }
             inputed = true;
         }
@@ -159,32 +181,35 @@ void Game::Update() {
         case 's':
             SetSnakeDirection(Direction::STOPPED);
             return;
+        case 'R':
+            ResetGame();
+            return;
+        case 'Q':
+            return;
     }
 
     // Check if the snake has hit the wall or itself
     bool snakeGrew = MoveSnake();
-    m_gameBoard.Update(snakeGrew);
+    m_pGameBoard->Update(snakeGrew);
     if (snakeGrew) {
         ++m_score;
-        PrintScore();
+        UpdateScore();
     }
 }
 
 void Game::PrintScore() {
-    static bool init = false;
-    if (!init) {
-        // Move cursor to the start of the game area
-        std::cout << "\033[1;1H" << "Score: " << m_score << std::endl;
-        init = true;
-    }
-    else {
-        std::cout << "\033[1;8H" << m_score;
-    }
+    // Move cursor to the start of the game area
+    std::cout << "\033[1;1H" << "Score: " << m_score << std::endl;
 }
+
+void Game::UpdateScore() {
+    std::cout << "\033[1;8H" << m_score;
+}
+
 
 bool Game::SnakeWallHit() const {
     // Get the head of the snake
-    std::pair<unsigned int, unsigned int> head = m_snake.GetHead();
+    std::pair<unsigned int, unsigned int> head = m_pSnake->GetHead();
 
     // Check if the head is at the edge of the grid
     return (head.first == 0 || head.first == m_gridWidth - 1 || head.second == 0 || head.second == m_gridHeight - 1);
@@ -192,10 +217,10 @@ bool Game::SnakeWallHit() const {
 
 bool Game::SnakeSelfHit() const {
     // Get the head of the snake
-    std::pair<unsigned int, unsigned int> head = m_snake.GetHead();
+    std::pair<unsigned int, unsigned int> head = m_pSnake->GetHead();
 
     // Check if the head is at the same position as any other segment of the snake
-    for (auto it = ++m_snake.GetSegments().begin(); it != m_snake.GetSegments().end(); ++it) {
+    for (auto it = ++m_pSnake->GetSegments().begin(); it != m_pSnake->GetSegments().end(); ++it) {
         if (*it == head) {
             return true;
         }
@@ -207,10 +232,10 @@ bool Game::SnakeSelfHit() const {
 // SnakeObstacleHit checks if the snake has hit an obstacle.
 bool Game::SnakeObstacleHit() const {
     // Get the head of the snake
-    std::pair<unsigned int, unsigned int> head = m_snake.GetHead();
+    std::pair<unsigned int, unsigned int> head = m_pSnake->GetHead();
 
     // Get the obstacles from the game board
-    const std::set<std::pair<unsigned int, unsigned int>>& obstacles = m_gameBoard.GetObstacles();
+    const std::set<std::pair<unsigned int, unsigned int>>& obstacles = m_pGameBoard->GetObstacles();
 
     // Check if the head is at the same position as an obstacle
     return (obstacles.find(head) != obstacles.end());
@@ -229,7 +254,7 @@ bool Game::IsGameOver() {
 // IsGameWon checks if the game is won.
 bool Game::IsGameWon() {
     // The game is over if the snake has filled the entire grid
-    if (m_snake.GetSize() >= m_gameBoard.GetAvailableCells()) {
+    if (m_pSnake->GetSize() >= m_pGameBoard->GetAvailableCells()) {
         Draw(false);
         return true;
     }
@@ -237,14 +262,20 @@ bool Game::IsGameWon() {
     return false;
 }
 
+// IsGameQuit checks if the game is quit.
+bool Game::IsGameQuit() {
+    return (m_lastCommand == 'Q');
+}
+
+// MoveSnake moves the snake in the current direction.
 bool Game::MoveSnake() {
     // Get the next position based on the current direction
     std::pair<unsigned int, unsigned int> nextPosition = GetSnakeNextPosition();
     if (CheckSnakeEatFruit(nextPosition)) {
-        m_snake.Move(nextPosition, true);
+        m_pSnake->Move(nextPosition, true);
         return true;
     } else {
-        m_gameBoard.SetCell(m_snake.Move(nextPosition, false), GameBoard::CellType::Empty);
+        m_pGameBoard->SetCell(m_pSnake->Move(nextPosition, false), GameBoard::CellType::Empty);
         return false;
     }
 }
@@ -267,7 +298,7 @@ std::pair<unsigned int, unsigned int> Game::GetSnakeNextPosition() const {
             break;
     }
 
-    std::pair<unsigned int, unsigned int> nextPosition = m_snake.GetHead();
+    std::pair<unsigned int, unsigned int> nextPosition = m_pSnake->GetHead();
     if (nextPosition.first + step.first >= 0 && nextPosition.first + step.first < m_gridWidth &&
         nextPosition.second + step.second >= 0 && nextPosition.second + step.second < m_gridHeight) {
         nextPosition.first += step.first;
@@ -278,11 +309,11 @@ std::pair<unsigned int, unsigned int> Game::GetSnakeNextPosition() const {
 }
 
 bool Game::CheckSnakeEatFruit() const {
-    return (CheckSnakeEatFruit(m_snake.GetHead()));
+    return (CheckSnakeEatFruit(m_pSnake->GetHead()));
 }
 
 bool Game::CheckSnakeEatFruit(std::pair<unsigned int, unsigned int> snakePosition) const {
-    return (snakePosition == m_gameBoard.GetFruitPosition());
+    return (snakePosition == m_pGameBoard->GetFruitPosition());
 }
 
 void Game::SetSnakeDirection(Direction dir) {
