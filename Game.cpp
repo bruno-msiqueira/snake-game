@@ -28,22 +28,20 @@ void Game::SetIterationTime(double time) {
 // Run starts the game loop.
 void Game::Run() {
     printf("\033[?25l"); // Hide cursor
-    bool isGameOver = false;
-    do
+    PrintScore();
+
+    while (!IsGameWon() && !IsGameOver())
     {
-        isGameOver = IsGameOver();
-        Draw(isGameOver);
+        Draw(false);
         Input();
         Update();
-    } while (!isGameOver && !IsGameWon());
+    };
 
     std::cout << "\033[" << m_gridHeight + 2 << ";1H\033[?25h"; // Move cursor and show it
 }
 
 // Draw renders the game state.
 void Game::Draw(bool isGameOver) {
-    PrintScore();
-
     // Fill the current buffer with the game state
     for (int i = 0; i < m_gridHeight; ++i) {
         for (int j = 0; j < m_gridWidth; ++j) {
@@ -140,18 +138,21 @@ char Game::Opposite(char command) {
 void Game::Update() {
     // Update snake's direction based on lastHorizontalCommand and lastVerticalCommand
     if (m_lastCommand == 'l') {
-        m_snake.SetDirection(Snake::Direction::LEFT);
+        SetSnakeDirection(Direction::LEFT);
     } else if (m_lastCommand == 'r') {
-        m_snake.SetDirection(Snake::Direction::RIGHT);
+        SetSnakeDirection(Direction::RIGHT);
     } else if (m_lastCommand == 'u') {
-        m_snake.SetDirection(Snake::Direction::UP);
+        SetSnakeDirection(Direction::UP);
     } else if (m_lastCommand == 'd') {
-        m_snake.SetDirection(Snake::Direction::DOWN);
+        SetSnakeDirection(Direction::DOWN);
     }
 
     // Check if the snake has hit the wall or itself
-    if (m_gameBoard.Update()) {
+    bool snakeGrew = MoveSnake();
+    m_gameBoard.Update(snakeGrew);
+    if (snakeGrew) {
         ++m_score;
+        PrintScore();
     }
 }
 
@@ -202,8 +203,13 @@ bool Game::SnakeObstacleHit() const {
 }
 
 // IsGameOver checks if the game is over.
-bool Game::IsGameOver() const {
-    return (SnakeWallHit() || SnakeSelfHit() || SnakeObstacleHit());
+bool Game::IsGameOver() {
+    if (SnakeWallHit() || SnakeSelfHit() || SnakeObstacleHit()) {
+        Draw(true);
+        return true;
+    }
+
+    return false;
 }
 
 // IsGameWon checks if the game is won.
@@ -215,4 +221,60 @@ bool Game::IsGameWon() {
     }
 
     return false;
+}
+
+bool Game::MoveSnake() {
+    // Get the next position based on the current direction
+    std::pair<unsigned int, unsigned int> nextPosition = GetSnakeNextPosition();
+    if (CheckSnakeEatFruit(nextPosition)) {
+        m_snake.Move(nextPosition, true);
+        return true;
+    } else {
+        m_gameBoard.SetCell(m_snake.Move(nextPosition, false), GameBoard::CellType::Empty);
+        return false;
+    }
+}
+
+// GetNextPosition returns the next position of the snake head based on the current direction.
+std::pair<unsigned int, unsigned int> Game::GetSnakeNextPosition() const {
+    std::pair<unsigned int, unsigned int> step = std::make_pair(0, 0);
+    switch (GetSnakeDirection()) {
+        case Direction::UP:
+            step.second = -1;
+            break;
+        case Direction::DOWN:
+            step.second = 1;
+            break;
+        case Direction::LEFT:
+            step.first = -1;
+            break;
+        case Direction::RIGHT:
+            step.first = 1;
+            break;
+    }
+
+    std::pair<unsigned int, unsigned int> nextPosition = m_snake.GetHead();
+    if (nextPosition.first + step.first >= 0 && nextPosition.first + step.first < m_gridWidth &&
+        nextPosition.second + step.second >= 0 && nextPosition.second + step.second < m_gridHeight) {
+        nextPosition.first += step.first;
+        nextPosition.second += step.second;
+    }
+
+    return nextPosition;
+}
+
+bool Game::CheckSnakeEatFruit() const {
+    return (CheckSnakeEatFruit(m_snake.GetHead()));
+}
+
+bool Game::CheckSnakeEatFruit(std::pair<unsigned int, unsigned int> snakePosition) const {
+    return (snakePosition == m_gameBoard.GetFruitPosition());
+}
+
+void Game::SetSnakeDirection(Direction dir) {
+    m_snakeDirection = dir;
+}
+
+Direction Game::GetSnakeDirection() const {
+    return m_snakeDirection;
 }

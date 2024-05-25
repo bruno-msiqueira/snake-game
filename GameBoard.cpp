@@ -9,7 +9,7 @@ GameBoard::GameBoard(unsigned int width, unsigned int height,
         m_gridHeight(height),
         m_pSnake(pSnake),
         m_grid(height,
-               std::vector<CellType>(width, CellType::Empty))
+               std::vector<CellType>(width, CellType::Unknown))
 {
     srand(time(0)); // Initialize random seed
 
@@ -28,7 +28,7 @@ GameBoard::GameBoard(unsigned int width, unsigned int height,
             }
             // Otherwise, add it to the set of empty positions
             else {
-                m_emptyPositions.insert(cell);
+                SetCell(cell, CellType::Empty);
             }
         }
     }
@@ -84,33 +84,15 @@ GameBoard::CellType GameBoard::GetCell(std::pair<unsigned int, unsigned int> cel
     return m_grid[cell.second][cell.first];
 }
 
-bool GameBoard::Update() {
-    bool fruitEaten = false;
+void GameBoard::Update(bool fruitEaten) {
+    // Update the Snake's head position
+    SetCell(m_pSnake->GetHead(), CellType::Snake);
 
     // Check if the snake has eaten the fruit
-    if (m_pSnake->EatFruit(GetFruitPosition())) {
-        fruitEaten = true;
-
-        // Updated the last position of eaten fruit to Snake
-        SetCell(GetFruitPosition(), CellType::Snake);
-
-        // Add a new segment to the snake
-        SetCell(m_pSnake->Move(true), CellType::Snake);
-
+    if (fruitEaten) {
         // Generate a new fruit
         AddFruit();
     }
-    else {
-        std::pair<unsigned int, unsigned int> lastSnakeSegmentPosition = m_pSnake->GetLastSegment();
-
-        // Move the snake in the updated direction
-        SetCell(m_pSnake->Move(false), CellType::Snake);
-
-        // Update the last position of the snake to Empty
-        SetCell(lastSnakeSegmentPosition, CellType::Empty);
-    }
-
-    return fruitEaten;
 }
 
 void GameBoard::AddFruit() {
@@ -126,7 +108,7 @@ void GameBoard::AddFruit() {
     }
 }
 
-std::pair<unsigned int, unsigned int> GameBoard::GetFruitPosition() {
+std::pair<unsigned int, unsigned int> GameBoard::GetFruitPosition() const {
     return m_fruitPosition;
 }
 

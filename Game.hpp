@@ -4,17 +4,23 @@
 #include "GameBoard.hpp"
 #include "Snake.hpp"
 
+// The Direction enum represents the direction of the snake.
+enum class Direction { UP, DOWN, LEFT, RIGHT };
+
 // The Game class manages the game.
 class Game {
 public:
     // Constructor initializes the game.
     Game(unsigned int gridWidth, unsigned int gridHeight, unsigned int obstacleCount);
+
     // Run starts the game loop.
     void Run();
+
 private:
     double ITERATION_TIME = 500.0; // Set default iteration time
 
     Snake m_snake;
+    Direction m_snakeDirection = Direction::RIGHT;
     GameBoard m_gameBoard;
     bool m_gameOver;
     unsigned int m_score;
@@ -45,12 +51,21 @@ private:
 
     // Draw renders the game state.
     void Draw(bool isGameOver);
+
     // Input handles user input.
     bool Input();
+
     // Update updates the game state.
     void Update();
+
     // PrintScore prints the current score
     void PrintScore();
+
+    // IsGameOver checks if the game is over.
+    bool IsGameOver();
+
+    // IsGameWon checks if the game is won.
+    bool IsGameWon();
 
     // SnakeSelfHit checks if the snake has hit itself.
     bool SnakeSelfHit() const;
@@ -61,11 +76,23 @@ private:
     // SnakeObstacleHit checks if the snake has hit an obstacle.
     bool SnakeObstacleHit() const;
 
-    // IsGameOver checks if the game is over.
-    bool IsGameOver() const;
+    // IsInSnakeBody checks if a point is in the snake's body.
+    bool MoveSnake();
 
-    // IsGameWon checks if the game is won.
-    bool IsGameWon();
+    // CheckSnakeEatFruit checks if the snake has eaten a fruit.
+    bool CheckSnakeEatFruit() const;
+
+    // CheckSnakeEatFruit checks if the snake has eaten a fruit.
+    bool CheckSnakeEatFruit(std::pair<unsigned int, unsigned int> snakePosition) const;
+
+    // SetDirection sets the direction of the snake.
+    void SetSnakeDirection(Direction dir);
+
+    // GetDirection gets the direction of the snake.
+    Direction GetSnakeDirection() const;
+
+    // GetSnakeNextPosition returns the next position of the snake.
+    std::pair<unsigned int, unsigned int> GetSnakeNextPosition() const;
 };
 
 #endif
