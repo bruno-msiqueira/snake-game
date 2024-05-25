@@ -11,24 +11,22 @@ enum class Direction { STOPPED, UP, DOWN, LEFT, RIGHT };
 class Game {
 public:
     // Constructor initializes the game.
-    Game(unsigned int gridWidth, unsigned int gridHeight, unsigned int obstacleCount);
+    Game(unsigned int gridWidth, unsigned int gridHeight, unsigned int obstacleCount, float iterationTime);
 
     // Run starts the game loop.
     void Run();
 
 private:
-    double ITERATION_TIME = 500.0; // Set default iteration time
-
+    double m_iterationTime = 500.0; // Set default iteration time
     Snake m_snake;
     Direction m_snakeDirection = Direction::STOPPED;
+    char m_lastCommand = 's'; // Default command is stopped
     GameBoard m_gameBoard;
     bool m_gameOver;
     unsigned int m_score;
 
     std::vector<std::vector<char>> m_currentBuffer;
     std::vector<std::vector<char>> m_previousBuffer;
-
-    char m_lastCommand = 's'; // Default command is stopped
 
     int m_gridWidth;
     int m_gridHeight;

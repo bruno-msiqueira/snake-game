@@ -7,8 +7,9 @@
 #include <chrono>
 
 // Constructor initializes the game.
-Game::Game(unsigned int gridWidth, unsigned int gridHeight, unsigned int obstacleCount)
-        :   m_snake(gridWidth, gridHeight),
+Game::Game(unsigned int gridWidth, unsigned int gridHeight, unsigned int obstacleCount, float iterationTime)
+        :   m_iterationTime(iterationTime),
+            m_snake(gridWidth, gridHeight),
             m_gameBoard(gridWidth, gridHeight, obstacleCount, &m_snake),
             m_gameOver(false),
             m_score(0),
@@ -17,12 +18,16 @@ Game::Game(unsigned int gridWidth, unsigned int gridHeight, unsigned int obstacl
             m_currentBuffer(gridHeight, std::vector<char>(gridWidth, ' ')),
             m_previousBuffer(gridHeight, std::vector<char>(gridWidth, ' ')) {
     // Initialize game
+    if (m_iterationTime < 100) {
+        m_iterationTime = 500;
+    }
+
     // Clear the console
     system(GetClearCommand().c_str());
 }
 
 void Game::SetIterationTime(double time) {
-    ITERATION_TIME = time;
+    m_iterationTime = time;
 }
 
 // Run starts the game loop.
@@ -90,7 +95,7 @@ bool Game::Input() {
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
 
-    while (elapsed.count() < ITERATION_TIME) {
+    while (elapsed.count() < m_iterationTime) {
         if (_kbhit()) {
             switch (_getch()) {
             case 72: // Up arrow key
