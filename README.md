@@ -42,15 +42,13 @@ Remember, the game ends when the snake hits the grid boundaries, an obstacle, or
 
 Here's a breakdown of the visual elements you'll encounter in the game:
 
-- **|#|** **Game Grid**: This is the area where the snake moves. It's defined by the `gridWidth` and `gridHeight` parameters when running the game. The grid boundaries are usually represented by a different character or color.
-- **|H|** **Snake Head**: The head of the snake is usually differentiated from the body to help you identify the direction of movement.
+- **|#|** **Game Grid**: This is the area where the snake moves. It's defined by the `gridWidth` and `gridHeight` parameters when running the game.
+- **|#|** **Obstacles**: If the `obstacleCount` parameter is greater than 0, there will be obstacles placed randomly on the game grid. The snake cannot pass through these obstacles.
+- **|H|** **Snake Head**: The head of the snake is differentiated from the body to help you identify the direction of movement.
 - **|O|** **Snake Body**: The body of the snake is represented by a series of connected characters moving across the game grid.
 - **|*|** **Fruit**: Food items appear randomly on the game grid. The snake grows in length each time it eats a food item.
-- **|#|** **Obstacles**: If the `obstacleCount` parameter is greater than 0, there will be obstacles placed randomly on the game grid. The snake cannot pass through these obstacles.
+- **| |** **Empty Space**: This represents the unoccupied areas on the game grid where the snake can move.
 - **Score**: The score is usually displayed at the top or bottom of the game grid. The score increases each time the snake eats a food item.
-- **| |** **Empty Space**: This represents the unoccupied areas on the game grid where the snake can move. In the game's visual representation, empty spaces might be represented by a specific character or simply left blank.
-
-
 
 ## Screenshots
 
